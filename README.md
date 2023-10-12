@@ -12,7 +12,6 @@ Este é um utilitário de interface gráfica (GUI) construído usando **Python**
 - 📊 Baixa os conjuntos de dados e os organiza em pastas.
 - ⏳ Apresenta uma barra de progresso e uma seção de log.
 - 🗃️ Salva os conjuntos de dados em um arquivo zip após o download.
-- 🖋️ Nota de direitos autorais interativa que direciona para o perfil do LinkedIn do autor.
 
 ## 🚀 Como usar
 

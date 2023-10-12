@@ -30,10 +30,7 @@ Este é um utilitário de interface gráfica (GUI) construído usando **Python**
 - `pandas`
 - `tkinter`
 
-Para instalar as dependências, execute:
-
-```bash
-pip install requests pandas
+Para instalar as dependências, execute: pip install requests pandas
 
 ## 🖋️ Sobre o Autor
 

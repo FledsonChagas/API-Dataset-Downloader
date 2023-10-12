@@ -2,9 +2,7 @@
 
 ![API](https://img.shields.io/badge/API-Dataset%20Downloader-brightgreen) ![Python](https://img.shields.io/badge/Python-3.7+-blue)
 
-<center>
-    <img src="image.png" alt="Screenshot da Aplicação" style="border: 2px solid black; max-width: 80%;">
-</center>
+![Screenshot da Aplicação](image.png)
 
 Este é um utilitário de interface gráfica (GUI) construído usando **Python** e **Tkinter** para baixar conjuntos de dados de APIs e salvá-los em um local de escolha do usuário.
 

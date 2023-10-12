@@ -2,6 +2,8 @@
 
 ![API](https://img.shields.io/badge/API-Dataset%20Downloader-brightgreen) ![Python](https://img.shields.io/badge/Python-3.7+-blue)
 
+![Screenshot da Aplicação](image.png)
+
 Este é um utilitário de interface gráfica (GUI) construído usando **Python** e **Tkinter** para baixar conjuntos de dados de APIs e salvá-los em um local de escolha do usuário.
 
 Até o momento foi testado e usado com sucesso na api: https://api.stats.govt.nz/ utilizando o método http.

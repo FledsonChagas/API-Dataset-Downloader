@@ -4,6 +4,8 @@
 
 Este é um utilitário de interface gráfica (GUI) construído usando **Python** e **Tkinter** para baixar conjuntos de dados de APIs e salvá-los em um local de escolha do usuário.
 
+Até o momento foi testado e usado com sucesso na api: https://api.stats.govt.nz/ utilizando o método http.
+
 ## 🌟 Características
 
 - 🔗 Interface gráfica amigável para inserir URL da API e Secret Key.

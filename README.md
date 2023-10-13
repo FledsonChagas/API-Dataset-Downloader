@@ -2,41 +2,41 @@
 
 ![API](https://img.shields.io/badge/API-Dataset%20Downloader-brightgreen) ![Python](https://img.shields.io/badge/Python-3.7+-blue)
 
-![Screenshot da Aplicação](image.png)
+![Application Screenshot](image.png)
 
-Este é um utilitário de interface gráfica (GUI) construído usando **Python** e **Tkinter** para baixar conjuntos de dados de APIs e salvá-los em um local de escolha do usuário.
+This is a graphical user interface (GUI) utility built using **Python** and **Tkinter** to download datasets from APIs and save them to a user-specified location.
 
-Até o momento foi testado e usado com sucesso na api: https://api.stats.govt.nz/ utilizando o método http.
+So far, it has been tested and successfully used with the API: https://api.stats.govt.nz/ using the http method.
 
-## 🌟 Características
+## 🌟 Features
 
-- 🔗 Interface gráfica amigável para inserir URL da API e Secret Key.
-- ✅ Validação de chave de API.
-- 📁 Opção de escolher o local de salvamento.
-- 📊 Baixa os conjuntos de dados e os organiza em pastas.
-- ⏳ Apresenta uma barra de progresso e uma seção de log.
-- 🗃️ Salva os conjuntos de dados em um arquivo zip após o download.
+- 🔗 User-friendly graphical interface to input API URL and Secret Key.
+- ✅ API key validation.
+- 📁 Option to choose save location.
+- 📊 Downloads data sets and organizes them into folders.
+- ⏳ Displays a progress bar and a log section.
+- 🗃️ Saves the data sets in a zip file after downloading.
 
-## 🚀 Como usar
+## 🚀 How to Use
 
-1. Abra o programa.
-2. Insira a URL da API e a Secret Key nos campos fornecidos.
-3. Selecione o local de salvamento ou use o padrão (Desktop).
-4. Clique em "Start Download" para iniciar o processo de download.
-5. O progresso será mostrado na barra de progresso.
-6. Após a conclusão, todos os conjuntos de dados baixados serão compactados em um arquivo zip no local de salvamento escolhido.
+1. Open the program.
+2. Enter the API URL and the Secret Key in the provided fields.
+3. Choose the save location or use the default (Desktop).
+4. Click on "Start Download" to initiate the download process.
+5. Progress will be displayed in the progress bar.
+6. Upon completion, all downloaded datasets will be compressed into a zip file in the chosen save location.
 
-## 🛠️ Dependências
+## 🛠️ Dependencies
 
 - Python 3.7+
 - `requests`
 - `pandas`
 - `tkinter`
 
-Para instalar as dependências, execute: pip install requests pandas
+To install the dependencies, run: pip install requests pandas
 
-## 🖋️ Sobre o Autor
+## 🖋️ About the Author
 
-Este projeto foi criado por **Fledson Chagas**. Para saber mais sobre meu trabalho e experiências, conecte-se comigo no LinkedIn!
+This project was created by **Fledson Chagas**. To learn more about my work and experiences, connect with me on LinkedIn!
 
 [![Fledson Chagas](https://img.shields.io/badge/LinkedIn-Fledson%20Chagas-blue?logo=linkedin)](https://www.linkedin.com/in/fledsonchagas/)

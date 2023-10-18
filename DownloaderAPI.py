@@ -6,6 +6,16 @@ import pandas as pd
 import os
 import zipfile
 import shutil
+import time
+import logging
+
+logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def log(message):
+    log_text.insert(tk.END, message + "\n")
+    log_text.see(tk.END)
+    logging.info(message)  # Esta linha grava a mensagem no arquivo de log.
+
 
 default_location_text = "Default location: Desktop"
 cancel_download = False
@@ -22,16 +32,52 @@ def validate_api(menu_url, headers):
     except:
         return "Bad API"
 
+
+def show_endpoint_selection(endpoints):
+    selection_window = tk.Toplevel(app)
+    selection_window.title("Choose Files")
+    selection_window.resizable(False, False)
+
+    check_vars = {}  # Para armazenar as variáveis de controle dos checkboxes
+
+    for index, endpoint in enumerate(endpoints):
+        check_var = tk.IntVar()
+        tk.Checkbutton(selection_window, text=endpoint, variable=check_var).grid(row=index, sticky=tk.W)
+        check_vars[endpoint] = check_var
+
+    def select_all_deselect_all():
+        if select_deselect_button["text"] == "Select All":
+            for var in check_vars.values():
+                var.set(1)
+            select_deselect_button.config(text="Deselect All")
+        else:
+            for var in check_vars.values():
+                var.set(0)
+            select_deselect_button.config(text="Select All")
+
+    select_deselect_button = tk.Button(selection_window, text="Select All", command=select_all_deselect_all)
+    select_deselect_button.grid(row=len(endpoints) + 1, column=0, pady=5, sticky=tk.W)
+
+    # Atualização do botão "OK" para chamar a função handle_ok_button
+    tk.Button(selection_window, text="OK", command=lambda: handle_ok_button(selection_window, check_vars)).grid(
+        row=len(endpoints) + 1, column=0, pady=5, sticky=tk.E)
+
+    selection_window.mainloop()
+
+    # Retorna uma lista dos endpoints selecionados
+    return [endpoint for endpoint, var in check_vars.items() if var.get() == 1]
+
 def start_download():
     global cancel_download
+
+    menu_url = url_entry.get()
+    secret_key = secret_key_entry.get()
 
     if start_button["text"] == "Cancel Download":
         cancel_download = True
         reset_interface()
         return
 
-    menu_url = url_entry.get()
-    secret_key = secret_key_entry.get()
     entered_location = location_entry.get()
 
     if entered_location == default_location_text:
@@ -46,18 +92,28 @@ def start_download():
 
     validation_result = validate_api(menu_url, headers)
     if validation_result == True:
-        start_button.config(text="Cancel Download")
-        progress_var.set(0)
-        progress_label.config(text="0%")
-        progress_bar.grid(row=4, column=0, columnspan=3, pady=5)
-        progress_label.grid(row=4, column=1)
-        thread = threading.Thread(target=main_function, args=(menu_url, headers, save_location))
-        thread.start()
+        response = requests.get(menu_url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            df = pd.DataFrame(data['dataset'])
+            endpoint_titles = list(df['title'])  # Obtemos os títulos dos endpoints para exibir na janela de seleção
+
+            selected_datasets = show_endpoint_selection(endpoint_titles)
+            if not selected_datasets:
+                log("No datasets selected.")
+                return  # Se nenhum dataset for selecionado, interrompemos aqui.
+
+            start_button.config(text="Cancel Download")
+            progress_var.set(0)
+            progress_label.config(text="0%")
+            progress_bar.grid(row=4, column=0, columnspan=3, pady=5)
+            progress_label.grid(row=4, column=1)
+            thread = threading.Thread(target=main_function, args=(menu_url, headers, save_location, selected_datasets))
+            thread.start()
+        else:
+            messagebox.showerror("Error", "Failed to fetch API endpoints.")
     else:
         messagebox.showerror("Error", validation_result)
-
-    thread = threading.Thread(target=main_function, args=(menu_url, headers, save_location))
-    thread.start()
 
 def toggle_log():
     if log_text.winfo_ismapped():
@@ -67,30 +123,83 @@ def toggle_log():
         log_frame.grid(row=6, column=0, columnspan=3, pady=10)
         expand_button.config(text="Hide Log")
 
-def fetch_data_from_endpoint(url, headers):
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        log(f"Error {response.status_code} accessing URL {url}: {response.content}")
-        return None
+def fetch_data_from_endpoint(url, headers, retries=5):
+    for _ in range(retries):
+        try:
+            response = requests.get(url, headers=headers)
+
+            if response.status_code == 200:
+                return response.json()
+
+            # Rate Limit Exceeded - Retry Logic
+            elif response.status_code == 429:
+                wait_time = response.json().get('message', '').split(' ')[-2]  # Assumes the message format is "Rate limit is exceeded. Try again in X seconds."
+                if wait_time and wait_time.isdigit():
+                    log(f"Rate limit exceeded. Waiting for {wait_time} seconds before retrying...")
+                    time.sleep(int(wait_time))
+                    continue
+                else:
+                    log(f"Error {response.status_code} accessing URL {url}: {response.content}")
+                    return None
+
+            # Other errors
+            elif response.status_code == 400:
+                log("Bad request. Please check the API URL and parameters.")
+                return None
+
+            elif response.status_code == 401:
+                log("Unauthorized. Please check your API secret key.")
+                return None
+
+            elif response.status_code == 403:
+                log("Forbidden. You don't have permission to access this resource.")
+                return None
+
+            elif response.status_code == 404:
+                log("Resource not found. Please check the API URL.")
+                return None
+
+            elif response.status_code in [500, 501, 502, 503, 504]:
+                log(f"Server error ({response.status_code}). Please try again later.")
+                return None
+
+            else:
+                log(f"Error {response.status_code} accessing URL {url}: {response.content}")
+                return None
+
+        except requests.ConnectionError:
+            log("Failed to connect. Please check your internet connection.")
+            if _ == retries - 1:
+                return None
+            time.sleep(5)  # Let's add a small wait time before retrying, just in case there's a temporary connectivity issue.
+
+        except Exception as e:
+            log(f"An unexpected error occurred: {str(e)}")
+            return None
+
+    log(f"Failed to fetch data after {retries} retries.")
+    return None
+
 
 def log(message):
     log_text.insert(tk.END, message + "\n")
     log_text.see(tk.END)
 
-def main_function(menu_url, headers, save_location):
+
+def main_function(menu_url, headers, save_location, selected_datasets):
     global cancel_download
     try:
         response = requests.get(menu_url, headers=headers)
         if response.status_code == 200:
             data = response.json()
             df = pd.DataFrame(data['dataset'])
-            total_datasets = len(df)
+            total_selected_datasets = len(selected_datasets)  # Alterado de total_datasets para total_selected_datasets
+            log("Starting download process...")
+
             for index, row in df.iterrows():
-                if cancel_download:
-                    reset_interface()
-                    return
+                title = row['title']
+                if title not in selected_datasets:
+                    continue
 
                 title = row['title']
                 endpoint = row['distribution'][0]['accessURL']
@@ -118,9 +227,10 @@ def main_function(menu_url, headers, save_location):
                                 sub_df.to_csv(filename, index=False)
                                 log(f"Saved {filename} successfully!")
 
-                percent_complete = (index + 1) / total_datasets * 100
-                progress_var.set(percent_complete)
-                progress_label.config(text=f"{int(percent_complete)}%")
+                                # Atualização da barra de progresso
+                            percent_complete = (selected_datasets.index(title) + 1) / total_selected_datasets * 100
+                            progress_var.set(percent_complete)
+                            progress_label.config(text=f"{int(percent_complete)}%")
 
         else:
             log(f"Error {response.status_code}: {response.content}")
@@ -155,6 +265,43 @@ def reset_interface():
     if log_text.winfo_ismapped():
         toggle_log()
 
+
+# Adicionado a função handle_ok_button para lidar com o botão OK
+def handle_ok_button(selection_window, check_vars):
+    # Retorna uma lista dos endpoints selecionados
+    selected_datasets = [endpoint for endpoint, var in check_vars.items() if var.get() == 1]
+
+    menu_url = url_entry.get()
+    secret_key = secret_key_entry.get()
+
+    entered_location = location_entry.get()
+    if entered_location == default_location_text:
+        save_location = os.path.join(os.environ['USERPROFILE'], 'Desktop')
+    else:
+        save_location = entered_location
+
+    headers = {
+        'User-Agent': 'curl/7.64.0',
+        'Ocp-Apim-Subscription-Key': secret_key,
+    }
+
+    # Destruir a janela de seleção
+    selection_window.destroy()
+
+    if not selected_datasets:
+        log("No datasets selected.")
+        return  # Se nenhum dataset for selecionado, interrompemos aqui.
+
+    # Iniciar o download do que foi selecionado
+    start_button.config(text="Cancel Download")
+    progress_var.set(0)
+    progress_label.config(text="0%")
+    progress_bar.grid(row=4, column=0, columnspan=3, pady=5)
+    progress_label.grid(row=4, column=1)
+    thread = threading.Thread(target=main_function, args=(menu_url, headers, save_location, selected_datasets))
+    thread.start()
+
+
 def browse_location():
     folder_selected = filedialog.askdirectory()
     if folder_selected:
@@ -171,9 +318,58 @@ def handle_focus_out(_):
         location_entry.insert(tk.END, default_location_text)
         location_entry.config(fg="gray")
 
+
+def show_about_popup():
+    about_window = tk.Toplevel(app)
+    about_window.title("About")
+    about_window.resizable(False, False)
+
+    # Carrega e mostra a imagem do ícone
+    icon_image = tk.PhotoImage(file="ADD.png")
+    icon_label = tk.Label(about_window, image=icon_image)
+    icon_label.image = icon_image  # Mantém uma referência à imagem
+    icon_label.pack(pady=15)
+
+    # Nome e versão do programa
+    program_name = tk.Label(about_window, text="API Dataset Downloader", font=("Arial", 14, "bold"))
+    program_name.pack()
+
+    program_version = tk.Label(about_window, text="v1.3", font=("Arial", 12))
+    program_version.pack(pady=5)
+
+    # Informações de direitos autorais
+    copyright_info = tk.Label(about_window, text="Todos os direitos reservados à")
+    copyright_info.pack(pady=5)
+
+    # Hiperlink para o LinkedIn
+    def open_linkedin(event):
+        import webbrowser
+        webbrowser.open("https://www.linkedin.com/in/fledsonchagas/")
+
+    linkedin_link = tk.Label(about_window, text="Fledson Chagas", fg="blue", cursor="hand2")
+    linkedin_link.bind("<Button-1>", open_linkedin)
+    linkedin_link.pack()
+
+    # Hiperlink para o repositório GitHub
+    def open_github(event):
+        import webbrowser
+        webbrowser.open("https://github.com/FledsonChagas/API-Dataset-Downloader")
+
+    github_info = tk.Label(about_window, text="Veja novas versões no repositório:")
+    github_info.pack(pady=5)
+
+    github_link = tk.Label(about_window, text="GitHub", fg="blue", cursor="hand2")
+    github_link.bind("<Button-1>", open_github)
+    github_link.pack(pady=5)
+
+    about_window.mainloop()
+
 app = tk.Tk()
-app.title("API Dataset Downloader - v1.2")
+app.title("API Dataset Downloader - v1.3")
 app.resizable(False, False)  # Lock the window size
+
+# Definindo o ícone para a janela
+app.iconphoto(False, tk.PhotoImage(file="ADD.png"))
 
 frame = tk.Frame(app)
 frame.pack(padx=10, pady=10)
@@ -220,14 +416,16 @@ log_text.pack(side=tk.LEFT, fill=tk.BOTH)
 
 log_scroll.config(command=log_text.yview)
 
-# Copyright Label
-def open_linkedin(event):
-    import webbrowser
-    webbrowser.open("https://www.linkedin.com/in/fledsonchagas/")
 
-copyright_label = tk.Label(frame, text="Copyright Fledson Chagas", cursor="hand2", fg="blue")  # A cor azul para se parecer com um link
-copyright_label.grid(row=7, column=0, columnspan=3, pady=2, sticky=tk.SE)  # SE = South-East, para alinhar ao canto inferior direito
-copyright_label.bind("<Button-1>", open_linkedin)  # Vincula o clique esquerdo do mouse ao evento open_linkedin
+# Defina a imagem do ícone primeiro
+about_icon = tk.PhotoImage(file="info.png")  # Supondo que você tenha um arquivo chamado 'info.png'
 
+# Em seguida, redimensione a imagem
+about_icon = about_icon.subsample(20, 20)  # Reduz a imagem para 1/3 do tamanho original
+
+# Botão "About" com ícone e texto
+about_button = tk.Button(frame, text=" About", image=about_icon, compound="left", command=show_about_popup, borderwidth=0)
+about_button.image = about_icon  # Mantém uma referência à imagem
+about_button.grid(row=7, column=0, columnspan=3, pady=2, sticky=tk.SE)
 
 app.mainloop()

@@ -1,11 +1,20 @@
-![Logo](ADD.png)
+<p align="center">
+  <img src="ADD.png" alt="Logo">
+</p>
+<div align="center">
 
 # API Dataset Downloader 📥
 
+</div>
+
+<br><br>
 ![API](https://img.shields.io/badge/API-Dataset%20Downloader-brightgreen) ![Python](https://img.shields.io/badge/Python-3.7+-blue)
+<br><br>
 
-![Application Screenshot](image.png)
-
+<p align="center">
+  <img src="image.png" alt="Application Screenshot">
+</p>
+<br><br>
 This is a graphical user interface (GUI) utility built using **Python** and **Tkinter** to download datasets from APIs and save them to a user-specified location.
 
 So far, it has been tested and successfully used with the API: https://api.stats.govt.nz/ using the http method.

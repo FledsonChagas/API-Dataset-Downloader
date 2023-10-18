@@ -1,3 +1,5 @@
+![Logo](ADD.png)
+
 # API Dataset Downloader 📥
 
 ![API](https://img.shields.io/badge/API-Dataset%20Downloader-brightgreen) ![Python](https://img.shields.io/badge/Python-3.7+-blue)

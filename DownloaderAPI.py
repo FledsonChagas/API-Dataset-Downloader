@@ -364,12 +364,19 @@ def show_about_popup():
 
     about_window.mainloop()
 
+
+
+current_directory = os.path.dirname(os.path.abspath(__file__))
+image_path = os.path.join(current_directory, 'ADD.png')
+about_icon = tk.PhotoImage(file=image_path)
+
 app = tk.Tk()
 app.title("API Dataset Downloader - v1.3")
 app.resizable(False, False)  # Lock the window size
 
-# Definindo o ícone para a janela
-app.iconphoto(False, tk.PhotoImage(file="ADD.png"))
+# Definindo o ícone para a janela usando o caminho correto
+app.iconphoto(False, tk.PhotoImage(file=image_path))
+
 
 frame = tk.Frame(app)
 frame.pack(padx=10, pady=10)
@@ -416,9 +423,11 @@ log_text.pack(side=tk.LEFT, fill=tk.BOTH)
 
 log_scroll.config(command=log_text.yview)
 
+# Defina o caminho correto para a imagem
+info_image_path = os.path.join(current_directory, 'info.png')
 
-# Defina a imagem do ícone primeiro
-about_icon = tk.PhotoImage(file="info.png")  # Supondo que você tenha um arquivo chamado 'info.png'
+# Defina a imagem do ícone usando o caminho correto
+about_icon = tk.PhotoImage(file=info_image_path)
 
 # Em seguida, redimensione a imagem
 about_icon = about_icon.subsample(20, 20)  # Reduz a imagem para 1/3 do tamanho original
@@ -427,5 +436,6 @@ about_icon = about_icon.subsample(20, 20)  # Reduz a imagem para 1/3 do tamanho 
 about_button = tk.Button(frame, text=" About", image=about_icon, compound="left", command=show_about_popup, borderwidth=0)
 about_button.image = about_icon  # Mantém uma referência à imagem
 about_button.grid(row=7, column=0, columnspan=3, pady=2, sticky=tk.SE)
+
 
 app.mainloop()

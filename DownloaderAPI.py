@@ -325,7 +325,8 @@ def show_about_popup():
     about_window.resizable(False, False)
 
     # Carrega e mostra a imagem do ícone
-    icon_image = tk.PhotoImage(file="ADD.png")
+    icon_image_path = os.path.join(current_directory, 'ADD.png')
+    icon_image = tk.PhotoImage(file=icon_image_path)
     icon_label = tk.Label(about_window, image=icon_image)
     icon_label.image = icon_image  # Mantém uma referência à imagem
     icon_label.pack(pady=15)
@@ -366,17 +367,19 @@ def show_about_popup():
 
 
 
-current_directory = os.path.dirname(os.path.abspath(__file__))
-image_path = os.path.join(current_directory, 'ADD.png')
-about_icon = tk.PhotoImage(file=image_path)
-
 app = tk.Tk()
 app.title("API Dataset Downloader - v1.3")
 app.resizable(False, False)  # Lock the window size
 
-# Definindo o ícone para a janela usando o caminho correto
-app.iconphoto(False, tk.PhotoImage(file=image_path))
+# Definindo o ícone para a janela
+current_directory = os.path.dirname(os.path.abspath(__file__))
+image_path = os.path.join(current_directory, 'ADD.png')
+app_icon = tk.PhotoImage(file=image_path)
+app.iconphoto(False, app_icon)
 
+# Agora, defina a imagem do ícone "About"
+about_icon_path = os.path.join(current_directory, 'info.png')
+about_icon = tk.PhotoImage(file=about_icon_path)
 
 frame = tk.Frame(app)
 frame.pack(padx=10, pady=10)
@@ -426,8 +429,6 @@ log_scroll.config(command=log_text.yview)
 # Defina o caminho correto para a imagem
 info_image_path = os.path.join(current_directory, 'info.png')
 
-# Defina a imagem do ícone usando o caminho correto
-about_icon = tk.PhotoImage(file=info_image_path)
 
 # Em seguida, redimensione a imagem
 about_icon = about_icon.subsample(20, 20)  # Reduz a imagem para 1/3 do tamanho original
